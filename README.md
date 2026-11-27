@@ -17,12 +17,12 @@
   <img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white" alt="Laravel 13">
   <img src="https://img.shields.io/badge/PHP-%E2%89%A5%208.4.1-777BB4?logo=php&logoColor=white" alt="PHP 8.4.1+">
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React 19">
-  <img src="https://img.shields.io/badge/Inertia-3%20SSR-9553E9?logo=inertia&logoColor=white" alt="Inertia 3 SSR">
+  <img src="https://img.shields.io/badge/Inertia-3_SSR-9553E9" alt="Inertia 3 SSR">
   <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
   <img src="https://img.shields.io/badge/MySQL-8.4-4479A1?logo=mysql&logoColor=white" alt="MySQL 8.4">
   <img src="https://img.shields.io/badge/Node.js-%E2%89%A5%2022-5FA04E?logo=nodedotjs&logoColor=white" alt="Node.js 22+">
-  <img src="https://img.shields.io/badge/lisensi%20kode-MIT-22c55e?style=flat" alt="Lisensi kode MIT">
+  <img src="https://img.shields.io/badge/lisensi_kode-MIT-22c55e" alt="Lisensi kode MIT">
 </p>
 
 <p align="center">
