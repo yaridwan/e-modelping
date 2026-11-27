@@ -199,12 +199,12 @@ Skrip mencadangkan database server dulu, mengganti isinya dengan data lokal, men
 
 ## 9. Cron: retensi & cadangan
 
-SSH Hostinger **tidak menyediakan `crontab`**, jadi cron dibuat lewat hPanel → **Lanjutan → Cron Job** → jenis **Custom**. Ganti `u123456789` dengan username SSH Anda (perintah memakai PHP 8.4 dari §6):
+Jam server Hostinger memakai **UTC** (WIB − 7 jam). SSH Hostinger **tidak menyediakan `crontab`**, jadi cron dibuat lewat hPanel → **Lanjutan → Cron Job** → jenis **Custom**. Ganti `u123456789` dengan username SSH Anda (perintah memakai PHP 8.4 dari §6):
 
-| Jadwal                      | Perintah                                                                                                                                                   |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Setiap menit (`* * * * *`)  | `cd /home/u123456789/e-modelping/current && /opt/alt/php84/usr/bin/php artisan schedule:run >> /dev/null 2>&1`                                             |
-| Harian 01:30 (`30 1 * * *`) | `APP=/home/u123456789/e-modelping bash /home/u123456789/e-modelping/current/deploy/cadangan.sh >> /home/u123456789/e-modelping/cadangan/cadangan.log 2>&1` |
+| Jadwal                                           | Perintah                                                                                                                                                   |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Setiap menit (`* * * * *`)                       | `cd /home/u123456789/e-modelping/current && /opt/alt/php84/usr/bin/php artisan schedule:run >> /dev/null 2>&1`                                             |
+| Harian 01.30 WIB (`30 18 * * *`, jam server UTC) | `APP=/home/u123456789/e-modelping bash /home/u123456789/e-modelping/current/deploy/cadangan.sh >> /home/u123456789/e-modelping/cadangan/cadangan.log 2>&1` |
 
 `schedule:run` menjalankan `ping:bersihkan-retensi` setiap hari (statistik & pesan lewat masa retensi). `cadangan.sh` menyimpan `db-*.sql.gz` + `media-*.tar.gz` selama 14 hari di `~/e-modelping/cadangan/` (mendukung `mysqldump` MariaDB). Hostinger juga membuat cadangan otomatis (hPanel → **File → Cadangan**). Unduh cadangan secara berkala ke komputer Anda.
 
