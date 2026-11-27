@@ -20,11 +20,20 @@ class SkemaDatabaseTest extends TestCase
         'pesan_kontak', 'kunjungan_halaman', 'aktivitas_dokumen', 'log_aktivitas', 'pengalihan_url', 'token_atur_ulang_sandi',
     ];
 
-    public function test_basis_data_adalah_mysql_innodb_utf8mb4(): void
+    /**
+     * Basis data yang didukung: MySQL 8.4 (VPS) dan MariaDB ≥ 10.4 (shared hosting, mis. Hostinger).
+     * CI menjalankan seluruh tes di keduanya.
+     */
+    public function test_basis_data_adalah_mysql_atau_mariadb_innodb_utf8mb4(): void
     {
-        $this->assertSame('mysql', DB::connection()->getDriverName());
+        $driver = DB::connection()->getDriverName();
         $versi = DB::selectOne('select version() as v')->v;
-        $this->assertMatchesRegularExpression('/^8\.4\./', $versi, 'Pengujian harus berjalan di MySQL 8.4');
+        if ($driver === 'mariadb' || str_contains(strtolower($versi), 'mariadb')) {
+            $this->assertMatchesRegularExpression('/^(10\.(4|5|6|11)|1[1-9])\./', $versi, 'MariaDB yang didukung: 10.4 ke atas');
+        } else {
+            $this->assertSame('mysql', $driver);
+            $this->assertMatchesRegularExpression('/^8\.4\./', $versi, 'MySQL yang didukung: 8.4');
+        }
         $tabel = DB::select('select table_name as t, engine as e, table_collation as c from information_schema.tables where table_schema = database()');
         foreach ($tabel as $t) {
             $this->assertSame('InnoDB', $t->e, "Tabel {$t->t} harus InnoDB");

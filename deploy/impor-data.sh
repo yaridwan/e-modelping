@@ -18,6 +18,7 @@ source "$DIR/lib/db-klien.sh"
 APP=${APP:-/var/www/e-model-ping}
 CUR=$APP/current
 ENV_FILE=${ENV_FILE:-$APP/shared/.env}
+PHP=${PHP:-php}                     # Hostinger: bisa diisi biner PHP 8.4, mis. PHP=/usr/bin/php8.4
 MEDIA=$APP/shared/storage/app/private/media
 ARSIP=${1:?Pemakaian: impor-data.sh <arsip.tar.gz> [--pertahankan-demo]}
 OPSI=${2:-}
@@ -54,7 +55,7 @@ bash "$DIR/cadangan.sh"
 
 cd "$CUR"
 echo "3/7 Mode pemeliharaan ..."
-php artisan down --retry=60
+"$PHP" artisan down --retry=60
 DIMATIKAN=1
 
 echo "4/7 Mengimpor database (mengganti isi lama) ..."
@@ -68,17 +69,17 @@ if [[ -d $KERJA/media ]]; then
 fi
 
 echo "6/7 Migrasi & data demo ..."
-php artisan migrate --force
+"$PHP" artisan migrate --force
 if [[ $OPSI != "--pertahankan-demo" ]]; then
-    php artisan ping:hapus-demo --force
+    "$PHP" artisan ping:hapus-demo --force
 fi
 
 echo "7/7 Membangun ulang cache ..."
-php artisan optimize:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan up
+"$PHP" artisan optimize:clear
+"$PHP" artisan config:cache
+"$PHP" artisan route:cache
+"$PHP" artisan view:cache
+"$PHP" artisan up
 DIMATIKAN=0
 
 echo ""

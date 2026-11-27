@@ -32,8 +32,15 @@ CNF=$(buat_klien_cnf "$ENV_FILE")
 trap 'rm -f "$CNF"' EXIT
 DB=$(nilai_env DB_DATABASE "$ENV_FILE")
 
+# Opsi khusus mysqldump MySQL 8 (mysqldump MariaDB, mis. di Hostinger, menolaknya):
+# --set-gtid-purged=OFF agar dump dapat diimpor di server lain; --column-statistics=0 agar klien
+# MySQL 8 tetap bisa mencadangkan server MariaDB.
+OPSI_KLIEN=()
+BANTUAN=$(mysqldump --help 2>/dev/null || true)
+grep -q -- '--set-gtid-purged' <<<"$BANTUAN" && OPSI_KLIEN+=(--set-gtid-purged=OFF)
+grep -q -- '--column-statistics' <<<"$BANTUAN" && OPSI_KLIEN+=(--column-statistics=0)
 mysqldump --defaults-extra-file="$CNF" --single-transaction --quick --no-tablespaces --hex-blob \
-    --set-gtid-purged=OFF "$DB" | gzip -9 > "$TUJUAN/db-$STEMPEL.sql.gz"
+    "${OPSI_KLIEN[@]}" "$DB" | gzip -9 > "$TUJUAN/db-$STEMPEL.sql.gz"
 
 MEDIA_INDUK=$APP/shared/storage/app/private
 if [[ -d $MEDIA_INDUK/media ]]; then

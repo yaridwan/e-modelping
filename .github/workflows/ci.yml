@@ -15,26 +15,49 @@ permissions:
 
 jobs:
   uji:
-    name: Tes, lint, tipe & build
+    name: Tes (${{ matrix.nama }})
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # MySQL 8.4: target VPS. Lint, tipe & audit cukup dijalankan sekali di sini.
+          - nama: MySQL 8.4
+            koneksi: mysql
+            image: mysql:8.4
+            sehat: mysqladmin ping -h 127.0.0.1 -prahasia
+            lengkap: true
+          # MariaDB: target shared hosting (mis. Hostinger).
+          - nama: MariaDB 10.11
+            koneksi: mariadb
+            image: mariadb:10.11
+            sehat: healthcheck.sh --connect --innodb_initialized
+            lengkap: false
+          - nama: MariaDB 11.4
+            koneksi: mariadb
+            image: mariadb:11.4
+            sehat: healthcheck.sh --connect --innodb_initialized
+            lengkap: false
 
     services:
-      mysql:
-        image: mysql:8.4
+      db:
+        image: ${{ matrix.image }}
         env:
           MYSQL_ROOT_PASSWORD: rahasia
           MYSQL_DATABASE: e_model_ping_testing
+          MARIADB_ROOT_PASSWORD: rahasia
+          MARIADB_DATABASE: e_model_ping_testing
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -prahasia"
+          --health-cmd="${{ matrix.sehat }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=12
 
     env:
-      DB_CONNECTION: mysql
+      DB_CONNECTION: ${{ matrix.koneksi }}
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
       DB_DATABASE: e_model_ping_testing
@@ -77,21 +100,145 @@ jobs:
           php artisan key:generate
 
       - name: Pint (gaya PHP)
+        if: matrix.lengkap
         run: vendor/bin/pint --test
 
       - name: Lint & format frontend
+        if: matrix.lengkap
         run: npm run check
 
       - name: TypeScript
+        if: matrix.lengkap
         run: npm run types:check
 
       - name: Build klien + SSR
         run: npm run build:ssr
 
-      - name: Tes PHPUnit (MySQL 8.4)
+      - name: Tes PHPUnit (${{ matrix.nama }})
         run: php artisan test
 
       - name: Audit keamanan dependensi
+        if: matrix.lengkap
         run: |
           composer audit --no-interaction
           npm audit --omit=dev
+
+  hostinger:
+    name: Simulasi pasang Hostinger (MariaDB, tanpa SSR)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    services:
+      db:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: rahasia
+          MARIADB_DATABASE: e_model_ping
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    env:
+      APP: /tmp/host/domains/contoh.com/aplikasi
+      PAKET: /tmp/e-model-ping-hostinger.zip
+
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Siapkan PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mbstring, gd, intl, zip, bcmath, fileinfo
+          coverage: none
+          tools: composer:v2
+
+      - name: Siapkan Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Klien MariaDB (mysql/mysqldump seperti di Hostinger)
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq mariadb-client
+          mysqldump --version
+
+      - name: Buat paket (setara scripts/paket-hostinger.ps1)
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          ISI=/tmp/paket/e-model-ping
+          git ls-files -co --exclude-standard | grep -Ev -f deploy/hostinger/pola-buang-paket.txt | while read -r f; do
+            [ -f "$f" ] && install -D -m 644 "$f" "$ISI/$f"
+          done
+          cp -r public/build "$ISI/public/build"
+          composer install --working-dir="$ISI" --no-dev --optimize-autoloader --no-interaction --no-progress
+          rm -f "$ISI"/bootstrap/cache/*.php
+          (cd /tmp/paket && zip -qr "$PAKET" e-model-ping)
+          ls -lh "$PAKET"
+          ! unzip -l "$PAKET" | grep -E 'e-model-ping/(\.env$|tests/|vendor/phpunit/|node_modules/)'
+
+      - name: Pasang jalan 1 (membuat .env dari templat)
+        run: |
+          mkdir -p /tmp/host/domains/contoh.com/public_html
+          unzip -q "$PAKET" 'e-model-ping/deploy/hostinger/pasang-rilis.sh' -d /tmp/alat
+          set +e
+          bash /tmp/alat/e-model-ping/deploy/hostinger/pasang-rilis.sh "$PAKET"
+          kode=$?
+          set -e
+          test "$kode" = 2
+          grep -q '^APP_KEY=base64:' "$APP/shared/.env"
+
+      - name: Pasang jalan 2 (instalasi penuh)
+        run: |
+          sed -i \
+            -e 's|^APP_URL=.*|APP_URL=http://127.0.0.1:8080|' \
+            -e 's|^DB_HOST=.*|DB_HOST=127.0.0.1|' \
+            -e 's|^DB_DATABASE=.*|DB_DATABASE=e_model_ping|' \
+            -e 's|^DB_USERNAME=.*|DB_USERNAME=root|' \
+            -e 's|^DB_PASSWORD=.*|DB_PASSWORD="rahasia"|' \
+            -e 's|^SESSION_SECURE_COOKIE=.*|SESSION_SECURE_COOKIE=false|' \
+            -e 's|^MAIL_MAILER=.*|MAIL_MAILER=log|' \
+            -e 's|^ADMIN_AWAL_SUREL=.*|ADMIN_AWAL_SUREL=admin@contoh.test|' \
+            -e 's|^ADMIN_AWAL_SANDI=.*|ADMIN_AWAL_SANDI=SandiCi12345678|' \
+            "$APP/shared/.env"
+          bash /tmp/alat/e-model-ping/deploy/hostinger/pasang-rilis.sh "$PAKET"
+          test -L "$APP/current"
+          test -L "$APP/current/storage" && test -L "$APP/current/.env"
+
+      - name: Rilis kedua (pembaruan + cadangan otomatis)
+        run: |
+          sleep 1
+          bash "$APP/current/deploy/hostinger/pasang-rilis.sh" "$PAKET"
+          ls -l "$APP"/cadangan/db-*.sql.gz
+          test "$(ls -1 "$APP/releases" | wc -l)" -eq 2
+
+      - name: Uji HTTP lewat public_html (symlink)
+        run: |
+          cd /tmp/host/domains/contoh.com
+          mv public_html public_html.lama
+          ln -s aplikasi/current/public public_html
+          cd public_html
+          php -S 127.0.0.1:8080 -t . "$APP/current/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php" > /tmp/php-server.log 2>&1 &
+          sleep 2
+          for u in / /modul /modul/sintaks-model /dokumen/1/baca /admin/masuk /robots.txt /sitemap.xml /build/manifest.json; do
+            kode=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$u")
+            echo "$u -> $kode"
+            test "$kode" = 200
+          done
+          curl -s http://127.0.0.1:8080/ | grep -q 'E-Model PING'
+          curl -s http://127.0.0.1:8080/robots.txt | grep -q 'Disallow: /admin'
+          curl -s http://127.0.0.1:8080/dokumen/1/berkas | head -c 5 | grep -q '%PDF-'
+
+      - name: Log bila gagal
+        if: failure()
+        run: |
+          cat /tmp/php-server.log 2>/dev/null || true
+          tail -n 50 "$APP"/shared/storage/logs/*.log 2>/dev/null || true

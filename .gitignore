@@ -13,6 +13,7 @@
 /vendor
 /storage/app/private/media
 /cadangan
+/paket
 /scripts/php-lokal/*.local.ini
 .DS_Store
 .env

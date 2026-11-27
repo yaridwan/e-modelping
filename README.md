@@ -45,7 +45,7 @@
 - **Panel admin lengkap** (satu pengelola, login + captcha): editor teks kaya (Tiptap) untuk bab & subbab, versi dokumen PDF, beranda dinamis, media, galeri, FAQ, menu, pengalihan URL, **pesan masuk** (aksi massal, arsip, balas lewat surel), statistik + ekspor CSV, log audit, pengaturan identitas/logo/SEO.
 - **Privasi & keamanan**: tanpa pelacak pihak ketiga, statistik pihak pertama berbasis sidik HMAC (IP mentah tidak disimpan), CSP bernonce, sanitasi HTML, validasi PDF/gambar berbasis isi, rate limit, audit log.
 - **Database berbahasa Indonesia**: 23 tabel domain dengan nama tabel & kolom Indonesia (termasuk `riwayat_migrasi`), MySQL 8.4.
-- **Siap produksi**: skrip rilis tanpa downtime, layanan SSR systemd, cadangan harian otomatis, ekspor/impor data lokal → server, 59 tes otomatis + CI GitHub Actions.
+- **Siap produksi di VPS maupun shared hosting (Hostinger)**: rilis tanpa downtime, layanan SSR systemd (VPS), paket ZIP siap unggah (shared hosting), cadangan harian otomatis, ekspor/impor data lokal → server, 59 tes otomatis di MySQL 8.4 & MariaDB + CI GitHub Actions.
 
 ## Tangkapan layar
 
@@ -81,7 +81,14 @@ Admin: http://127.0.0.1:8000/admin/masuk — surel `admin@emodelping.test`, sand
 
 ## Deploy ke server
 
-Butuh **VPS** (PHP 8.4 + MySQL 8.4 + Node 22 + Nginx) — shared hosting tidak didukung karena SSR memerlukan proses Node. Ikuti **[docs/deploy.md](docs/deploy.md)**: persiapan server, `.env` produksi, rilis tanpa downtime (`deploy/deploy.sh`), HTTPS, layanan SSR, cron & cadangan, pemindahan data lokal, verifikasi, rollback, dan pemecahan masalah. Ringkasan & daftar periksa: [§15](#15-deploy-vps-nginx--php-fpm--mysql--node-ssr--https).
+Dua pilihan, keduanya dengan rilis tanpa downtime, cadangan harian, dan pemindahan data lokal:
+
+| Pilihan                                                          | Cocok untuk                                                     | Panduan                                                  |
+| ---------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------- |
+| **Shared hosting Hostinger** (Premium/Business) — tanpa SSR Node | Sudah punya hosting; tanpa biaya tambahan; MariaDB              | **[docs/deploy-hostinger.md](docs/deploy-hostinger.md)** |
+| **VPS** (PHP 8.4 + MySQL 8.4 + Node 22 + Nginx) — dengan SSR     | SEO & HTML awal penuh, lalu lintas tinggi, kendali server penuh | **[docs/deploy.md](docs/deploy.md)**                     |
+
+Di shared hosting, aset dan `vendor` disiapkan di komputer (`scripts/paket-hostinger.ps1`) lalu dipasang dengan `deploy/hostinger/pasang-rilis.sh`; judul, deskripsi, Open Graph, sitemap, dan JSON-LD tetap dirender server, hanya isi halaman yang dirender browser. Ringkasan & daftar periksa VPS: [§15](#15-deploy-vps-nginx--php-fpm--mysql--node-ssr--https).
 
 ## Daftar isi
 
@@ -113,7 +120,7 @@ Butuh **VPS** (PHP 8.4 + MySQL 8.4 + Node 22 + Nginx) — shared hosting tidak d
 | PDF.js (pdfjs-dist) · Tiptap                                   | 6.5.438 · 3.35.0                                                                                                                           |
 | Lucide                                                         | 0.475.0                                                                                                                                    |
 | symfony/html-sanitizer · smalot/pdfparser                      | 8.1.12 · 2.13.1                                                                                                                            |
-| MySQL                                                          | **8.4.13** (InnoDB, utf8mb4)                                                                                                               |
+| MySQL · MariaDB                                                | **8.4.13** (InnoDB, utf8mb4) · **MariaDB 10.4.32** diuji lokal (59 tes lulus), MariaDB 10.11 & 11.4 diuji di CI — untuk shared hosting     |
 | Node.js · npm                                                  | 24.13.1 (minimum **22** — syarat SSR Inertia 3) · 11.8.0                                                                                   |
 | PHPUnit · Pint                                                 | 12.5.45 · 1.32.3                                                                                                                           |
 
@@ -202,7 +209,7 @@ Pink profesional (primary `#BE185D`, aksen `#EC4899`, latar `#FFF7FB`, teks `#1F
 
 ## 10. Persyaratan
 
-PHP ≥ 8.4.1 (PHP 8.2 bawaan XAMPP **tidak** cukup — gagal dengan pesan _"Composer detected issues in your platform"_) dengan ekstensi `pdo_mysql, mbstring, openssl, fileinfo, gd (JPEG/PNG/WebP), intl, zip, bcmath, ctype, dom, xml`; Composer 2; Node.js ≥ 22 + npm; MySQL 8.4 (MariaDB tidak diuji). Opsional untuk menyiapkan ulang materi dari PDF: `pdftotext` (poppler) dan Python 3 + `pypdf` (`scripts/sumber/`).
+PHP ≥ 8.4.1 (PHP 8.2 bawaan XAMPP **tidak** cukup — gagal dengan pesan _"Composer detected issues in your platform"_) dengan ekstensi `pdo_mysql, mbstring, openssl, fileinfo, gd (JPEG/PNG/WebP), intl, zip, bcmath, ctype, dom, xml`; Composer 2; Node.js ≥ 22 + npm (lokal/VPS; tidak perlu di shared hosting); MySQL 8.4 **atau** MariaDB ≥ 10.4 (`DB_CONNECTION=mariadb`). Opsional untuk menyiapkan ulang materi dari PDF: `pdftotext` (poppler) dan Python 3 + `pypdf` (`scripts/sumber/`).
 
 ## 11. Instalasi lokal
 
@@ -273,6 +280,8 @@ npm run build:ssr && php artisan inertia:start-ssr && php artisan inertia:check-
 Hasil aktual ada di [docs/pengujian.md](docs/pengujian.md).
 
 ## 15. Deploy VPS (Nginx + PHP-FPM + MySQL + Node SSR + HTTPS)
+
+> Memakai shared hosting (mis. Hostinger Premium)? Lihat **[docs/deploy-hostinger.md](docs/deploy-hostinger.md)** — bagian ini khusus VPS.
 
 Berkas contoh: `deploy/nginx/e-model-ping.conf`, `deploy/systemd/e-model-ping-ssr.service` (atau `deploy/supervisor/e-model-ping-ssr.conf`), `deploy/cron/e-model-ping`, `deploy/deploy.sh` (memanggil `deploy/cadangan.sh` sebelum migrasi), `deploy/cadangan.sh`, `deploy/impor-data.sh`.
 
@@ -357,7 +366,7 @@ Kunjungan = respons 200 halaman publik, satu per sidik/jalur/hari (partial reloa
 
 ## 22. Status pengujian, keterbatasan, lisensi
 
-Status aktual: lihat [docs/pengujian.md](docs/pengujian.md). Keterbatasan utama: SMTP produksi, Lighthouse/axe, Playwright, dan deploy VPS belum dilakukan; tidak ada pemindai malware; pencarian tidak mencakup isi PDF; sebagian tabel sumber dirujuk ke PDF; galeri kosong sampai pemilik mengunggah media berizin; kontak/akun sosial/foto penyusun tidak diisi karena tidak tersedia dari sumber.
+Status aktual: lihat [docs/pengujian.md](docs/pengujian.md). Keterbatasan utama: SMTP produksi, Lighthouse/axe, Playwright, dan deploy ke server nyata (VPS/Hostinger) belum dilakukan — pemasangan Hostinger baru disimulasikan lokal (paket ZIP + `pasang-rilis.sh` + MariaDB, tanpa SSR); tidak ada pemindai malware; pencarian tidak mencakup isi PDF; sebagian tabel sumber dirujuk ke PDF; galeri kosong sampai pemilik mengunggah media berizin; kontak/akun sosial/foto penyusun tidak diisi karena tidak tersedia dari sumber.
 
 **Lisensi:** kode aplikasi MIT (lihat [`LICENSE`](LICENSE)). **Hak cipta materi** E-Model Pembiasaan PING (teks dan PDF di `database/seeders/aset/sumber`) tetap milik penyusun dan tidak termasuk lisensi kode. Aset bawaan (logo lencana "P", ilustrasi SVG tiga fase, gambar Open Graph) dibuat untuk proyek ini. Font Plus Jakarta Sans (SIL Open Font License) disajikan lokal. Komponen shadcn/ui (MIT), Lucide (ISC).
 
@@ -388,8 +397,8 @@ resources/
 └── views/app.blade.php    # kerangka HTML, meta SEO, JSON-LD
 routes/web.php · routes/console.php
 tests/Feature, tests/Unit  # 59 tes PHPUnit (MySQL)
-deploy/                    # deploy.sh, cadangan.sh, impor-data.sh, nginx/, systemd/, supervisor/, cron/, php/
-scripts/                   # serve-lokal (Windows), ekspor-data-lokal.ps1, sumber/ (ekstraksi materi PDF)
+deploy/                    # deploy.sh, cadangan.sh, impor-data.sh, nginx/, systemd/, supervisor/, cron/, php/, hostinger/ (pasang-rilis.sh, templat .env)
+scripts/                   # serve-lokal (Windows), ekspor-data-lokal.ps1, paket-hostinger.ps1, sumber/ (ekstraksi materi PDF)
 docs/                      # deploy, analisis sistem, arsitektur, kamus data, pengujian, gambar/
 .github/                   # CI GitHub Actions, templat issue & pull request
 ```

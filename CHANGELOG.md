@@ -2,6 +2,18 @@
 
 Semua perubahan penting pada proyek ini dicatat di sini. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan penomoran [Semantic Versioning](https://semver.org/lang/id/).
 
+## [Belum dirilis]
+
+### Ditambahkan
+
+- **Dukungan shared hosting (Hostinger Premium/Business)** tanpa SSR Node: `scripts/paket-hostinger.ps1` (paket ZIP berisi aset build + `vendor` tanpa paket dev), `deploy/hostinger/pasang-rilis.sh` (pasang/perbarui lewat SSH dengan rilis tanpa downtime, cadangan otomatis, pemeriksaan PHP & ekstensi), templat `deploy/hostinger/env-hostinger.contoh`, dan panduan [docs/deploy-hostinger.md](docs/deploy-hostinger.md).
+- **Dukungan MariaDB** (`DB_CONNECTION=mariadb`): seluruh tes lulus di MariaDB 10.4; CI menjalankan tes di MySQL 8.4, MariaDB 10.11, dan MariaDB 11.4.
+
+### Diubah
+
+- Daftar subbab di halaman `/modul` kini berada di dalam kartu bab (sebelumnya tertutup kartu baris berikutnya).
+- `deploy/cadangan.sh` mendukung `mysqldump` MariaDB; `deploy/impor-data.sh` menerima `PHP=` untuk biner PHP tertentu.
+
 ## [1.0.0] — 2026-11-27
 
 Rilis publik pertama.

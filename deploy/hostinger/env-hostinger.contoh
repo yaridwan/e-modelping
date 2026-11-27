@@ -1,0 +1,68 @@
+# .env produksi E-Model PING untuk shared hosting Hostinger (MariaDB, tanpa SSR Node).
+# Disalin otomatis ke <APP>/shared/.env oleh pasang-rilis.sh pada pemasangan pertama (APP_KEY diisi otomatis).
+# Ganti semua nilai bertanda <...>. Panduan: docs/deploy-hostinger.md
+
+APP_NAME="E-Model PING"
+APP_ENV=production
+APP_KEY=
+APP_DEBUG=false
+APP_URL=https://<domain-anda.com>
+
+APP_LOCALE=id
+APP_FALLBACK_LOCALE=id
+APP_FAKER_LOCALE=id_ID
+APP_MAINTENANCE_DRIVER=file
+BCRYPT_ROUNDS=12
+
+LOG_CHANNEL=stack
+LOG_STACK=daily
+LOG_DAILY_DAYS=14
+LOG_LEVEL=warning
+LOG_DEPRECATIONS_CHANNEL=null
+
+# hPanel → Database → Database: nama & pengguna berawalan u123456789_
+DB_CONNECTION=mariadb
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=<u123456789_emodelping>
+DB_USERNAME=<u123456789_emodelping>
+DB_PASSWORD="<sandi-database>"
+
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_PATH=/
+SESSION_DOMAIN=null
+SESSION_SECURE_COOKIE=true
+SESSION_SAME_SITE=lax
+
+BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=sync
+CACHE_STORE=file
+
+# Surel Hostinger (hPanel → Email). Alamat pengirim HARUS sama dengan akun SMTP.
+MAIL_MAILER=smtp
+MAIL_SCHEME=smtps
+MAIL_HOST=smtp.hostinger.com
+MAIL_PORT=465
+MAIL_USERNAME=<noreply@domain-anda.com>
+MAIL_PASSWORD="<sandi-surel>"
+MAIL_FROM_ADDRESS="<noreply@domain-anda.com>"
+MAIL_FROM_NAME="${APP_NAME}"
+
+# Shared hosting tidak menjalankan proses Node: SSR dimatikan (halaman dirender di browser;
+# judul, deskripsi, Open Graph, dan JSON-LD tetap dibuat server).
+INERTIA_SSR_ENABLED=false
+INERTIA_SSR_URL=http://127.0.0.1:13714
+
+# Hanya untuk membuat akun admin pertama bila database masih kosong — HAPUS sandi setelah login pertama.
+# Tidak diperlukan bila Anda mengimpor data lokal (akun admin ikut dari database lokal).
+ADMIN_AWAL_SUREL=<surel-asli-anda@domain.com>
+ADMIN_AWAL_NAMA="<Nama Anda>"
+ADMIN_AWAL_SANDI=
+
+PING_BATAS_UNGGAH_MAKS_MB=25
+TRUSTED_PROXIES=
+
+VITE_APP_NAME="${APP_NAME}"

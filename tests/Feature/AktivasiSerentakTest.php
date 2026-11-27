@@ -42,7 +42,7 @@ class AktivasiSerentakTest extends TestCase
             $versi[] = $v;
         }
 
-        $env = ['APP_ENV' => 'testing', 'DB_CONNECTION' => 'mysql', 'DB_DATABASE' => 'e_model_ping_testing', 'CACHE_STORE' => 'array', 'SESSION_DRIVER' => 'array', 'APP_URL' => 'http://ping.test'];
+        $env = ['APP_ENV' => 'testing', 'DB_CONNECTION' => (string) config('database.default'), 'DB_DATABASE' => 'e_model_ping_testing', 'CACHE_STORE' => 'array', 'SESSION_DRIVER' => 'array', 'APP_URL' => 'http://ping.test'];
         for ($ulang = 0; $ulang < 3; $ulang++) {
             $hasil = Process::concurrently(function ($pool) use ($versi, $env) {
                 foreach ($versi as $v) {
