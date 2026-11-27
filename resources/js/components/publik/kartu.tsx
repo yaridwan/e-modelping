@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { ArrowRight, Clock, FileCheck2, FileX2, Footprints } from 'lucide-react';
+import { ArrowRight, ChevronDown, Clock, FileCheck2, FileX2, Footprints, ListTree } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { IkonDb } from '@/components/umum/ikon';
 import { Muncul } from '@/components/umum/muncul';
 import { cn } from '@/lib/utils';
@@ -90,16 +91,22 @@ export function KartuAspek({ aspek, tampilkanIndikator = true, jeda = 0 }: { asp
     );
 }
 
+/**
+ * Kartu bab. Seluruh kartu dapat diklik (tautan judul membentang lewat `after:inset-0`).
+ * `kaki` dirender di dalam kartu, di atas lapisan tautan (z-10), mis. daftar subbab yang dapat dibuka.
+ */
 export function KartuBab({
     bab,
     tampilkanStatusDokumen = true,
     jeda = 0,
     varian = 'grid',
+    kaki,
 }: {
     bab: BabRingkas;
     tampilkanStatusDokumen?: boolean;
     jeda?: number;
     varian?: 'grid' | 'daftar';
+    kaki?: ReactNode;
 }) {
     return (
         <Muncul jeda={jeda} className="h-full">
@@ -137,9 +144,46 @@ export function KartuBab({
                             </span>
                         )}
                     </div>
+                    {kaki && <div className="relative z-10 mt-4 border-t pt-3">{kaki}</div>}
                 </div>
             </article>
         </Muncul>
+    );
+}
+
+/** Daftar subbab yang dapat dibuka-tutup di kaki kartu bab. */
+export function DaftarSubbabKartu({ bab }: { bab: BabRingkas }) {
+    const subbab = bab.subbab ?? [];
+    if (!subbab.length) {
+        return null;
+    }
+
+    return (
+        <details className="group/subbab text-sm">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-md py-1 font-semibold text-primary outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
+                <span className="inline-flex items-center gap-1.5">
+                    <ListTree className="size-4" aria-hidden />
+                    <span className="group-open/subbab:hidden">Lihat {subbab.length} subbab</span>
+                    <span className="hidden group-open/subbab:inline">Sembunyikan subbab</span>
+                </span>
+                <ChevronDown className="size-4 shrink-0 transition-transform group-open/subbab:rotate-180" aria-hidden />
+            </summary>
+            <ol className="mt-2 space-y-0.5" aria-label={`Subbab Bab ${bab.romawi}`}>
+                {subbab.map((s, i) => (
+                    <li key={s.slug}>
+                        <Link
+                            href={`${bab.url}#${s.slug}`}
+                            className="flex items-start gap-2 rounded-md px-2 py-1.5 text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                            <span className="mt-px w-4 shrink-0 text-xs font-bold text-muted-foreground" aria-hidden>
+                                {String.fromCharCode(65 + i)}
+                            </span>
+                            <span>{s.judul}</span>
+                        </Link>
+                    </li>
+                ))}
+            </ol>
+        </details>
     );
 }
 

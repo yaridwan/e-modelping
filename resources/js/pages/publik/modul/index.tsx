@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Download, FileText } from 'lucide-react';
-import { KartuBab } from '@/components/publik/kartu';
+import { DaftarSubbabKartu, KartuBab } from '@/components/publik/kartu';
 import { KepalaHalaman } from '@/components/publik/kepala-halaman';
 import { Button } from '@/components/ui/button';
 import { formatUkuran } from '@/lib/utils';
@@ -37,21 +37,7 @@ export default function DaftarModul({ bab, modul_lengkap }: { bab: BabRingkas[];
                     <ol className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                         {bab.map((b, i) => (
                             <li key={b.id}>
-                                <KartuBab bab={b} jeda={(i % 3) * 0.05} />
-                                {!!b.subbab?.length && (
-                                    <details className="mt-2 px-2 text-sm">
-                                        <summary className="cursor-pointer text-muted-foreground hover:text-primary">Lihat {b.subbab.length} subbab</summary>
-                                        <ul className="mt-2 space-y-1 pl-4">
-                                            {b.subbab.map((s) => (
-                                                <li key={s.slug}>
-                                                    <Link href={`${b.url}#${s.slug}`} className="text-foreground/80 hover:text-primary">
-                                                        {s.judul}
-                                                    </Link>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </details>
-                                )}
+                                <KartuBab bab={b} jeda={(i % 3) * 0.05} kaki={b.subbab?.length ? <DaftarSubbabKartu bab={b} /> : undefined} />
                             </li>
                         ))}
                     </ol>
