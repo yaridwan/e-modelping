@@ -1,0 +1,6 @@
+# /etc/cron.d/e-model-ping — penjadwal Laravel (menjalankan ping:bersihkan-retensi harian 02:30 WIB).
+# Antrean memakai driver sync, sehingga TIDAK perlu queue worker.
+* * * * * www-data cd /var/www/e-model-ping/current && /usr/bin/php artisan schedule:run >> /dev/null 2>&1
+# Cadangan harian database + media pukul 01:30 server (disimpan 14 hari di /var/www/e-model-ping/cadangan).
+# Buat foldernya dulu: sudo install -d -o www-data -g www-data -m 700 /var/www/e-model-ping/cadangan
+30 1 * * * www-data /bin/bash /var/www/e-model-ping/current/deploy/cadangan.sh >> /var/www/e-model-ping/cadangan/cadangan.log 2>&1

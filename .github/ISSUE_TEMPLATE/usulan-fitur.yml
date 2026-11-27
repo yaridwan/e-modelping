@@ -1,0 +1,29 @@
+name: Usulan fitur
+description: Usulkan fitur baru atau perbaikan
+title: "[Usulan] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: masalah
+    attributes:
+      label: Masalah yang ingin diselesaikan
+      description: Untuk siapa (pembaca/guru, admin) dan kebutuhan apa?
+    validations:
+      required: true
+  - type: textarea
+    id: solusi
+    attributes:
+      label: Usulan solusi
+    validations:
+      required: true
+  - type: textarea
+    id: alternatif
+    attributes:
+      label: Alternatif yang sudah dipertimbangkan
+  - type: checkboxes
+    id: batas
+    attributes:
+      label: Batas sistem
+      options:
+        - label: Usulan ini tidak menambah akun publik, data/foto/nilai anak, atau pelacak pihak ketiga (lihat README §1).
+          required: true

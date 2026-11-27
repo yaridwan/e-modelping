@@ -1,0 +1,31 @@
+* text=auto eol=lf
+
+# Skrip Windows harus CRLF agar CMD/PowerShell membacanya dengan benar.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Berkas biner: jangan pernah dikonversi (PDF sumber diverifikasi SHA-256 oleh seeder).
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.zip binary
+*.gz binary
+
+*.blade.php diff=html
+*.css diff=css
+*.html diff=html
+*.md diff=markdown
+*.php diff=php
+
+CHANGELOG.md export-ignore
+README.md export-ignore
+/.github export-ignore
+/docs/gambar export-ignore

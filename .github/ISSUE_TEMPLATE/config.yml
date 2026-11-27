@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Laporkan celah keamanan (privat)
+    url: https://github.com/yaridwan/e-modelping/security/advisories/new
+    about: Jangan laporkan celah keamanan lewat issue publik.
+  - name: Panduan deploy
+    url: https://github.com/yaridwan/e-modelping/blob/main/docs/deploy.md
+    about: Pertanyaan pemasangan di server — baca panduan dan bagian pemecahan masalah lebih dulu.

@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  uji:
+    name: Tes, lint, tipe & build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: rahasia
+          MYSQL_DATABASE: e_model_ping_testing
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -prahasia"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: e_model_ping_testing
+      DB_USERNAME: root
+      DB_PASSWORD: rahasia
+
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Siapkan PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mbstring, gd, intl, zip, bcmath, fileinfo
+          coverage: none
+          tools: composer:v2
+
+      - name: Siapkan Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - name: Pasang dependensi PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Pasang dependensi Node
+        run: npm ci --no-audit --no-fund
+
+      - name: Siapkan .env
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Pint (gaya PHP)
+        run: vendor/bin/pint --test
+
+      - name: Lint & format frontend
+        run: npm run check
+
+      - name: TypeScript
+        run: npm run types:check
+
+      - name: Build klien + SSR
+        run: npm run build:ssr
+
+      - name: Tes PHPUnit (MySQL 8.4)
+        run: php artisan test
+
+      - name: Audit keamanan dependensi
+        run: |
+          composer audit --no-interaction
+          npm audit --omit=dev
