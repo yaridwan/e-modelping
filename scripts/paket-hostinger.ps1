@@ -73,7 +73,7 @@ try {
         "Commit   : $commit$(if ($kotor) { ' (+ perubahan belum di-commit)' })",
         "Dibuat   : $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz')",
         'Butuh    : PHP >= 8.4.1 (pdo_mysql, mbstring, gd, intl, zip, bcmath, fileinfo), MariaDB >= 10.4 atau MySQL 8.4',
-        'Pasang   : APP=~/domains/<domain>/aplikasi bash e-model-ping/deploy/hostinger/pasang-rilis.sh <paket.zip>'
+        'Pasang   : APP=~/e-modelping DOMAIN=<domain> PHP=/opt/alt/php84/usr/bin/php bash e-model-ping/deploy/hostinger/pasang-rilis.sh <paket.zip>'
     ) | Set-Content -Path (Join-Path $isi 'VERSI.txt') -Encoding ASCII
 
     Write-Host '5/5 Membuat ZIP ...'

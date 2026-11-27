@@ -1,3 +1,9 @@
+# Modul JavaScript (.mjs, mis. worker PDF.js mode buku) wajib dikirim sebagai JavaScript.
+# Tanpa ini sebagian hosting (mis. Hostinger/LiteSpeed) mengirim text/plain dan browser menolaknya.
+<IfModule mod_mime.c>
+    AddType text/javascript .mjs
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

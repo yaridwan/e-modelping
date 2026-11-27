@@ -3,11 +3,13 @@
 # buatan scripts/paket-hostinger.ps1. Tanpa sudo, Node, Composer, maupun git di server.
 # Panduan lengkap: docs/deploy-hostinger.md
 #
-# Pemakaian (lewat SSH):
-#   APP=~/domains/domain-anda.com/aplikasi bash pasang-rilis.sh ~/e-model-ping-hostinger-YYYYMMDD-HHMMSS.zip
+# Pemakaian (lewat SSH; di Hostinger `php` CLI bisa 8.3, jadi tunjuk PHP 8.4):
+#   APP=~/e-modelping DOMAIN=domain-anda.com PHP=/opt/alt/php84/usr/bin/php \
+#     bash pasang-rilis.sh ~/e-model-ping-hostinger-YYYYMMDD-HHMMSS.zip
 # Variabel:
-#   APP           folder aplikasi (wajib)            PHP           biner PHP ≥ 8.4.1 (bawaan: php)
-#   SIMPAN_RILIS  jumlah rilis disimpan (bawaan 3)   LEWATI_SEED=1 lewati db:seed (data dasar)
+#   APP           folder aplikasi (wajib), di luar ~/domains (Hostinger menandai ~/domains/<domain>/ DO_NOT_UPLOAD_HERE)
+#   PHP           biner PHP ≥ 8.4.1 (bawaan: php)    DOMAIN        nama domain (untuk petunjuk public_html)
+#   SIMPAN_RILIS  jumlah rilis disimpan (bawaan 3)   LEWATI_SEED=1 lewati db:seed (mis. sebelum impor data lokal)
 #
 # Tata letak (sama dengan VPS, lihat docs/deploy.md):
 #   $APP/current -> releases/<waktu>   $APP/shared/.env   $APP/shared/storage   $APP/cadangan
@@ -15,7 +17,7 @@
 set -euo pipefail
 
 PAKET=${1:?Pemakaian: APP=<folder-aplikasi> bash pasang-rilis.sh <paket.zip>}
-APP=${APP:?Isi APP, mis. APP=~/domains/domain-anda.com/aplikasi}
+APP=${APP:?Isi APP, mis. APP=~/e-modelping}
 PHP=${PHP:-php}
 SIMPAN_RILIS=${SIMPAN_RILIS:-3}
 APP=$(mkdir -p "$APP" && cd "$APP" && pwd)
@@ -47,6 +49,9 @@ trap 'rm -rf "$SEMENTARA"' EXIT
 unzip -q "$PAKET" -d "$SEMENTARA"
 [[ -f $SEMENTARA/e-model-ping/artisan ]] || gagal "Isi paket tidak dikenali (folder e-model-ping/artisan tidak ada)."
 mv "$SEMENTARA/e-model-ping" "$REL"
+# ZIP buatan Windows tidak membawa izin Unix (hasil ekstrak 777/666). Rapikan: folder 755, berkas 644.
+find "$REL" -type d -exec chmod 755 {} +
+find "$REL" -type f -exec chmod 644 {} +
 [[ -f $REL/VERSI.txt ]] && sed 's/^/    /' "$REL/VERSI.txt"
 
 if [[ ! -f $SHARED/.env ]]; then
@@ -93,9 +98,14 @@ ls -1dt "$APP"/releases/*/ | tail -n +$((SIMPAN_RILIS + 1)) | xargs -r rm -rf
 
 echo ""
 echo "Rilis aktif: $REL"
-DOMAIN_DIR=$(dirname "$APP")
-if [[ ! -L $DOMAIN_DIR/public_html ]]; then
-    echo "LANGKAH SEKALI: arahkan public_html ke aplikasi (lihat docs/deploy-hostinger.md §6):"
-    echo "  cd $DOMAIN_DIR && mv public_html public_html.lama && ln -s $(basename "$APP")/current/public public_html"
+# Petunjuk symlink public_html bila belum ada. DOMAIN (opsional) = nama domain di ~/domains/.
+if [[ -n ${DOMAIN:-} ]]; then
+    PUBLIK="$HOME/domains/$DOMAIN/public_html"
+    if [[ ! -L $PUBLIK ]]; then
+        echo "LANGKAH SEKALI: arahkan public_html ke aplikasi (docs/deploy-hostinger.md §7):"
+        echo "  cd $HOME/domains/$DOMAIN && mv public_html public_html.lama && ln -s $APP/current/public public_html"
+    fi
+else
+    echo "Belum diarahkan? Lihat docs/deploy-hostinger.md §7: public_html -> $APP/current/public (symlink)."
 fi
 echo "Perubahan bisa butuh 1–2 menit untuk tampil (cache jalur PHP)."

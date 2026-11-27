@@ -14,6 +14,12 @@ Semua perubahan penting pada proyek ini dicatat di sini. Format mengikuti [Keep 
 - Daftar subbab di halaman `/modul` kini berada di dalam kartu bab (sebelumnya tertutup kartu baris berikutnya).
 - `deploy/cadangan.sh` mendukung `mysqldump` MariaDB; `deploy/impor-data.sh` menerima `PHP=` untuk biner PHP tertentu.
 
+### Diperbaiki (dari deploy nyata ke e-modelping.com, Hostinger Premium)
+
+- Mode buku gagal memuat di LiteSpeed/Hostinger karena worker PDF.js `.mjs` dikirim sebagai `text/plain` → `public/.htaccess` kini menambahkan `AddType text/javascript .mjs`.
+- ZIP buatan Windows menghasilkan izin 777/666 saat diekstrak → `pasang-rilis.sh` merapikan izin ke 755/644.
+- Panduan Hostinger: aplikasi di `~/e-modelping` (folder domain bertanda `DO_NOT_UPLOAD_HERE`), PHP CLI 8.4 di `/opt/alt/php84/usr/bin/php` (CLI bawaan tetap 8.3), cron lewat hPanel (SSH tanpa `crontab`); `pasang-rilis.sh` menerima `DOMAIN=` untuk petunjuk `public_html`.
+
 ## [1.0.0] — 2026-11-27
 
 Rilis publik pertama.
